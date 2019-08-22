@@ -20,7 +20,7 @@
    * **运行速度较慢**
    * :type im_converted_name: str, name of single channel image
    * :type im_canonical_name: str, name of single channel image
-* func: **executeQIR(imGroup_0_loc, imGroup_1_loc, group_loc, new_im_name)*
+* func: **executeQIR(imGroup_0_loc, imGroup_1_loc, group_loc, new_im_name)**
    * :type imGroup_0_loc: str, the directory of the canonical group
    * :type imGroup_1_loc: str,the directory of another group
    * :type group_loc: str, the directory for save
