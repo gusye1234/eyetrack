@@ -2,14 +2,14 @@ import pandas as pd
 import os
 import re
 import numpy as np
-import random
+# import random
 import cv2 as cv
 from time import time
 import multiprocessing
 from torch.utils.data import Dataset, DataLoader
 import torch
-import logging
 import world
+from utils import ToTensor
 
 
 W = 480
@@ -19,27 +19,15 @@ C = 1
 cores = multiprocessing.cpu_count() // 2
 cores = 1 if cores == 0 else cores
 
-class ToTensor:
-    def __call__(self, sample):
-        for i in sample:
-            if "img" in i:
-                sample[i] = torch.from_numpy(sample[i].transpose(2,0,1))
-            else:
-                sample[i] = torch.from_numpy(sample[i])
-        return sample
 
 class dataloader(Dataset):
-    def __init__(self, datapath = '../data', mode="train",scale=True, transform=ToTensor()):
+    def __init__(self, datapath = '../data', mode="train", transform=None):
         assert mode in ["train", "test"]
         self.data_path = os.path.join(datapath, mode)
+        self.mode = mode
         self.labels, self.data, self.length = self.getDataIndex()
         # self.mean, self.std = self.getStat()
-        self.mean, self.std = world.mean, world.std
-        self.scale = scale
-        self.transform = transform
-        print("treat it as grey images")
-        print(">MEAN:", self.mean)
-        print(">STD:", self.std)
+        self.transform = transform if transform is not None else ToTensor()
 
     def getDataIndex(self):
         from glob import glob
@@ -57,12 +45,12 @@ class dataloader(Dataset):
         for i in list(eyesXY):
             length = eyesXY[i].shape[0]
             order += [ os.path.join(i, str(j)) for j in range(1, length+1)]
-        random.shuffle(order)
+        # random.shuffle(order)
         try:
             assert len(order) == total
         except AssertionError:
             raise AssertionError("%s %s, wrong in loading data" % (len(order), total))
-        print(">TOTAL DATA:", len(order))
+        print(">TOTAL %s DATA:" % self.mode, len(order))
         return eyesXY, order, total
 
     def getStat(self, sep = 500):
@@ -117,17 +105,8 @@ class dataloader(Dataset):
         res = {}
         filename = self.data[idx]
         # print(filename)
-        imgs = np.zeros((576, 720, 4))
         for j, name in enumerate(["%s_%d.png" % (filename, k) for k in [0, 1, 3,4]]):
-            if self.scale:
-                res["img" + str(j)] = (cv.imread(name)[..., 0:1] - self.mean)/self.std
-            else:
-                res["img" + str(j)] = cv.imread(name)[..., 0]
-        # if self.scale:
-        
-        #     res["img"] = (imgs - self.mean)/self.std
-        # else:
-        #    pass
+            res["img" + str(j)] = cv.imread(name)[..., 0:1]
         res["label"] = self.getLabel(filename)
         if self.transform:
             res = self.transform(res)
