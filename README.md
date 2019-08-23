@@ -2,18 +2,34 @@
 
 
 
+### developing environment
+
+* macOS Mojave version 10.14
+* Python 3.6.3
+* pytorch1.2.0
+* torchvision0.4.0a0+6b959ee
+
 ### progress
 
-* 8.22 完成 data_loader, 返回数据为`dict` 类型. 
+* 2019.8.22: complete `load_data.py` , return  `dict` type data. 
 
-  其中 key 包括:
+  including keys:
 
-  * `img0`(左眼0),`img1`(左眼1), `im3`(右眼3), `img4`(右眼4) , 皆为 `CHW`(channel first)的图片数据,shape`(-1, 1, 576, 720)` ,类型为`torch.Tensor`
-  * `label` , 表示的是 **凝视点** 在图像坐标系下的坐标, 类型为`torch.Tensor`
+  * `img0`(left eye 0),`img1`(left eye 1), `im2`(right eye 3), `img3`(right eye 4) , image data format is `CHW`(channel first) ,shape`(-1, 1, 576, 720)`, type `torch.Tensor`
+  * `label` , gaze point in image coordinate , type `torch.Tensor`
+*  2019.8.23: add some image normalize tools  by [dearmrlv](https://github.com/dearmrlv)
+
+* 2019.8.24: complete pipeline, and run it on CPU device
+
+![program](./imgs/program.png)
+
+
+
+
 
 ### model
 
-1. ,目前打算使用MIT 的 iTracker 模型
+*  iTracker from [CSALI MIT](https://github.com/CSAILVision/GazeCapture)
 
 
 
@@ -21,16 +37,19 @@
 
 
 
-### data
+### install
 
-在 eyetrack 目录下创建 data 目录
+* `pip install requirements.txt`
+* **prepare data**
+
+under `root` 
 
 ```bash
 mkdir data && cd data
 mkdir train && mkdir test
 ```
 
-按照格式将数据复制
+copy data following the paths
 
 ```bash
 data
@@ -43,4 +62,29 @@ data
     ├── 02
     └── etc
 ```
+
+* `cd code && python main.py`
+* follow the error traceback and see what's going on 😁
+
+
+
+### TODO
+
+* pytorch's data format problems--solved
+
+```python
+# File "main.py"
+m = m.float()
+# File "utils.py", Function 'train' and 'validate'
+output = model(data["img0"].float(), data["img1"].float(), data["img2"].float(), data["img3"].float())
+```
+
+maybe there are some more elegant way to do so.
+
+- running on GPU platform
+- HOW TO EXPLAIN?
+
+
+
+
 

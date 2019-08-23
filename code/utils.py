@@ -121,13 +121,13 @@ def validate(val_loader, model, criterion, epoch):
         batch_time.update(time.time() - end)
         end = time.time()
 
-
-        print('Epoch (val): [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Error L2 {lossLin.val:.4f} ({lossLin.avg:.4f})\t'.format(
-                    epoch, i, len(val_loader), batch_time=batch_time,
-                   loss=losses,lossLin=lossesLin))
+        if i%10 == 0:
+            print('Epoch (val): [{0}][{1}/{2}]\t'
+                    'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                    'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                    'Error L2 {lossLin.val:.4f} ({lossLin.avg:.4f})\t'.format(
+                        epoch, i, len(val_loader), batch_time=batch_time,
+                    loss=losses,lossLin=lossesLin))
 
     return lossesLin.avg
 
@@ -182,18 +182,31 @@ def make_sample(data_sample):
 
 
 def show_config():
-    print(">CONFIG BELOW")
-    print("[mean]:", world.mean)
-    print("[std]", world.std)
-    print("[batch_size]", world.batch_size)
-    print("[init_lr]", world.base_lr)
-    print("[epochs]", world.epochs)
-    print("[batchs pre epoch]", world.n_batch)
-    print("[load weights]", world.doLoad)
-    print("[weights file]", os.path.join(world.CHECKPOINTS_PATH, world.filename))
+    print(">CONFIG BELOW⬇︎")
+    print("---------------------")
+    print("normalize")
+    print("-[mean]:", world.mean)
+    print("-[std]", world.std)
+    print("---------------------")
+    print("hyperparameters")
+    print("-[batch_size]", world.batch_size)
+    print("-[init_lr]", world.base_lr)
+    print("---------------------")
+    print("training setup")
+    print("-[epochs]", world.epochs)
+    print("-[batchs pre epoch]", world.n_batch)
+    print("---------------------")
+    print("loading")
+    print("-[load weights]", world.doLoad)
+    print("-[weights file]", os.path.join(world.CHECKPOINTS_PATH, world.filename))
+    print("---------------------")
     if world.tensorboard:
         print("[comment]", world.comment)
-
+    if world.useCuda:
+        print("[device]", "GPU")
+    else:
+        print("[device]", "CPU")
+    print("---------------------")
 
 # =======================LZY part===============================================
 
