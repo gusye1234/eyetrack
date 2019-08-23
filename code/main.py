@@ -15,6 +15,7 @@ def syn_world(args):
     world.doLoad = args.doload
     world.comment = args.comment    
     world.tensorboard = args.tensorboard
+    world.epochs = args.epochs
 
 
 if __name__ == "__main__":
