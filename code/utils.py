@@ -108,7 +108,7 @@ def validate(val_loader, model, criterion, epoch):
 
         loss = criterion(output, data["label"].float())
         
-        lossLin = output - data["label"]
+        lossLin = output - data["label"].float()
         lossLin = torch.mul(lossLin,lossLin)
         lossLin = torch.sum(lossLin,1)
         lossLin = torch.mean(torch.sqrt(lossLin))
@@ -191,6 +191,8 @@ def show_config():
     print("[batchs pre epoch]", world.n_batch)
     print("[load weights]", world.doLoad)
     print("[weights file]", os.path.join(world.CHECKPOINTS_PATH, world.filename))
+    if world.tensorboard:
+        print("[comment]", world.comment)
 
 
 # =======================LZY part===============================================

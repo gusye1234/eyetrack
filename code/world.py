@@ -33,7 +33,8 @@ filename = "checkpoint.pth.tar"
 batch_size = cuda.device_count()*100 if cuda.device_count() != 0 else 4
 doLoad = True
 n_batch = 0
-
+comment = "test"
+tensorboard = False
 
 momentum = 0.9
 lr = 0.0001

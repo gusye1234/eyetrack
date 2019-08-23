@@ -10,13 +10,18 @@ import world
 from parser import args
 
 
+def syn_world(args):
+    world.batch_size = args.batch_size
+    world.doLoad = args.doload
+    world.comment = args.comment    
+    world.tensorboard = args.tensorboard
 
 
 if __name__ == "__main__":
+    # load config
     args = args().parse_args()
-    world.batch_size = args.batch_size
-    world.doLoad = args.doload    
-    
+    syn_world(args)
+    # load data
     tran = transforms.Compose([utils.Scale() ,utils.ToTensor()])
     data = dataloader(transform=tran)
     data_train = DataLoader(data, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
@@ -24,11 +29,14 @@ if __name__ == "__main__":
     data_test = dataloader(mode="test", transform=tran)
     data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
 
+    # show config and data sample
     data_sample = data[0]
     img = utils.make_sample(data_sample)
     utils.show_config()
 
+    # initialize model and restore training process
     m = ITrackerModel()
+
     epoch_before = 0
     best = 1e10
     if world.doLoad:
@@ -45,19 +53,24 @@ if __name__ == "__main__":
         else:
             print('>Warning: Could not read checkpoint! start fresh!!')
 
+    # define loss and optimizer
     loss = nn.MSELoss()
     opt = torch.optim.Adam(m.parameters(), 
                         world.lr, 
                         # momentum=world.momentum, 
                         weight_decay=world.weight_decay)
+    # switch to GPU
     if world.useCuda:
         m = m.cuda()
         loss = loss.cuda()
-    # m.eval()
+    
+    # data format
     m = m.float()
+    
+    # training process
     if args.tensorboard:
         print(">ASK FOR tensorboard")
-        print("\'tensorboard --logdir=runs\' to run it")
+        print("use command \'tensorboard --logdir=runs\' to run it")
         with SummaryWriter(comment="-" + args.comment) as w:
             w.add_image("image", img, 0)
             for epoch in range(world.epochs):
