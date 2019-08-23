@@ -72,7 +72,7 @@ def train(train_loader, model, criterion,optimizer, epoch, writer=None):
         end = time.time()
 
         
-        if i % 10 == 0:
+        if i % 5 == 0:
             print('Epoch (train): [{0}][{1}/{2}]\t'
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
