@@ -1,5 +1,11 @@
 import torch
 import world
+import time
+import os
+import shutil
+
+
+# ===========================tranformers=============================================
 
 class ToTensor:
     def __call__(self, sample):
@@ -23,6 +29,172 @@ class Scale:
             if "img" in i:
                 sample[i] = (sample[i] - self.mean)/self.std
         return sample
+
+
+def adjust_learning_rate(optimizer, epoch):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+    lr = world.base_lr * (0.1 ** (epoch // 30))
+    print(f"Epoch (train): [{epoch}]-------learning_rate-------{lr}")
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+# ===========================train and test=============================================
+
+def train(train_loader, model, criterion,optimizer, epoch, writer=None):
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    losses = AverageMeter()
+
+    # switch to train mode
+    model.train()
+
+    end = time.time()
+    # n_batch = (len(train_loader) // world.batch_size) + 1
+    # for i, (row, imFace, imEyeL, imEyeR, faceGrid, gaze) in enumerate(train_loader):
+    for i, data in enumerate(train_loader):
+        # measure data loading time
+        data_time.update(time.time() - end)
+        output = model(data["img0"].float(), data["img1"].float(), data["img2"].float(), data["img3"].float())
+        loss = criterion(output, data["label"].float())
+        
+        if writer is not None:
+            writer.add_scalar("Loss/train", loss.data.item(), epoch*len(train_loader)+i)
+
+        losses.update(loss.data.item(), data["img0"].size(0))
+
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        print('Epoch (train): [{0}][{1}/{2}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+                   epoch, i, len(train_loader), batch_time=batch_time,
+                   data_time=data_time, loss=losses))
+        if i % 10 == 0:
+            print("SAVE")
+            save_checkpoint({
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    "best_prec1": loss.data.item(), 
+                }, True)
+
+
+def validate(val_loader, model, criterion, epoch):
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    losses = AverageMeter()
+    lossesLin = AverageMeter()
+
+    # switch to evaluate mode
+    model.eval()
+    end = time.time()
+
+
+    oIndex = 0
+    for i, data in enumerate(val_loader):
+        # measure data loading time
+        data_time.update(time.time() - end)
+
+        # compute output
+        with torch.no_grad():
+            output = model(data["img0"].float(), data["img1"].float(), data["img2"].float(), data["img3"].float())
+
+        loss = criterion(output, data["label"].float())
+        
+        lossLin = output - data["label"]
+        lossLin = torch.mul(lossLin,lossLin)
+        lossLin = torch.sum(lossLin,1)
+        lossLin = torch.mean(torch.sqrt(lossLin))
+
+        losses.update(loss.data.item(), data["label"].size(0))
+        lossesLin.update(lossLin.item(), data["label"].size(0))
+     
+        # compute gradient and do SGD step
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+
+        print('Epoch (val): [{0}][{1}/{2}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                  'Error L2 {lossLin.val:.4f} ({lossLin.avg:.4f})\t'.format(
+                    epoch, i, len(val_loader), batch_time=batch_time,
+                   loss=losses,lossLin=lossesLin))
+
+    return lossesLin.avg
+
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+# ===========================save and load=============================================
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    if not os.path.isdir(world.CHECKPOINTS_PATH):
+        os.makedirs(world.CHECKPOINTS_PATH, 0o777)
+    bestFilename = os.path.join(world.CHECKPOINTS_PATH, 'best_' + filename)
+    filename = os.path.join(world.CHECKPOINTS_PATH, filename)
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, bestFilename)
+
+def load_checkpoint(filename='checkpoint.pth.tar'):
+    filename = os.path.join(world.CHECKPOINTS_PATH, filename)
+    if not os.path.isfile(filename):
+        return None
+    state = torch.load(filename)
+    return state
+
+
+# ===========================helper=============================================
+
+
+def make_sample(data_sample):
+    from torchvision.utils import make_grid
+    for i in range(4):
+        data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 576, 720)
+    img = torch.cat([data_sample['img0'],data_sample['img1'], data_sample['img2'], data_sample['img3']], dim=0)
+    img = make_grid(img)
+    return img
+
+
+def show_config():
+    print(">CONFIG BELOW")
+    print("[mean]:", world.mean)
+    print("[std]", world.std)
+    print("[batch_size]", world.batch_size)
+    print("[init_lr]", world.base_lr)
+    print("[epochs]", world.epochs)
+    print("[batchs pre epoch]", world.n_batch)
+    print("[load weights]", world.doLoad)
+    print("[weights file]", os.path.join(world.CHECKPOINTS_PATH, world.filename))
+
+
+# =======================LZY part===============================================
+
 
 import numpy as np
 import cv2 as cv
