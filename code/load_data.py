@@ -98,6 +98,16 @@ class dataloader(Dataset):
             raise TypeError(">GOT a filename is %s, which didn't exist" % (filename))
         return label[index-1]
 
+    def getSample(self):
+        res = {}
+        filename = self.data[idx]
+        # print(filename)
+        for j, name in enumerate(["%s_%d.png" % (filename, k) for k in [0, 1, 3,4]]):
+            res["img" + str(j)] = cv.imread(name)[..., 0:1]
+        res["label"] = self.getLabel(filename)
+        return res
+
+
     def __len__(self):
         return self.length
 

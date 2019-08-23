@@ -52,11 +52,12 @@ class ItrackerImageModel(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
-            nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(64, 32, kernel_size=5, stride=2, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 16, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=0),
             nn.ReLU(inplace=True),
-            
+            nn.Conv2d(16, 8, kernel_size=1, stride=1, padding=0),
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x):
@@ -76,14 +77,14 @@ class ITrackerModel(nn.Module):
         self.eyeright2 = ItrackerImageModel()
         # Joining both eyes
         self.eyesFC = nn.Sequential(
-            nn.Linear(4*28*38*64, 128),
+            nn.Linear(4*8*14*19, 128),
             nn.ReLU(inplace=True),
             )
         # Joining everything
         self.fc = nn.Sequential(
-            nn.Linear(128+64+128, 128), 
+            nn.Linear(128, 64), 
             nn.ReLU(inplace=True),
-            nn.Linear(128, 2),
+            nn.Linear(64, 2),
             )
 
     def forward(self, img0, img1,img3,img4):
@@ -98,6 +99,7 @@ class ITrackerModel(nn.Module):
         # xEyes = self.eyesFC(xEyes)
         x = torch.cat([xEyeL1, xEyeL2, xEyeR1, xEyeR2], dim=1)  
         x = self.eyesFC(x)
+        x = self.fc(x)
         return x
 
 
