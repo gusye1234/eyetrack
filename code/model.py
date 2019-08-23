@@ -16,7 +16,6 @@ import numpy as np
 import torch.utils.model_zoo as model_zoo
 from torchsummary import summary
 
-
 '''
 Pytorch model for the iTracker.
 
@@ -87,12 +86,12 @@ class ITrackerModel(nn.Module):
             nn.Linear(128, 2),
             )
 
-    def forward(self, eyesLeft1, eyesLeft2,eyesRight1,eyesRight2):
+    def forward(self, img0, img1,img3,img4):
         # Eye nets
-        xEyeL1 = self.eyeleft1(eyesLeft1)
-        xEyeL2 = self.eyeleft2(eyesLeft2)
-        xEyeR1 = self.eyeright1(eyesRight1)
-        xEyeR2 = self.eyeright2(eyesRight2)
+        xEyeL1 = self.eyeleft1(img0)
+        xEyeL2 = self.eyeleft2(img1)
+        xEyeR1 = self.eyeright1(img3)
+        xEyeR2 = self.eyeright2(img4)
 
         # Cat and FC
         # xEyes = torch.cat((xEyeL, xEyeR), 1)

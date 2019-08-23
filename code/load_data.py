@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import re
 import numpy as np
-# import random
+import random
 import cv2 as cv
 from time import time
 import multiprocessing
