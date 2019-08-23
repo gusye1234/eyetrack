@@ -80,7 +80,7 @@ if __name__ == "__main__":
                 # print(len(opt.state_dict()["param_groups"]))
                 utils.train(data_train, m, loss, opt, epoch, w)
                 pred = utils.validate(data_test, m ,loss, epoch)
-                w.add_scalar("Loss/test", pred, epoch)
+                w.add_scalar(f"Loss/test{world.base_lr}", pred, epoch)
                 is_best = pred < best
                 best_pred = min(pred, best)
                 utils.save_checkpoint({

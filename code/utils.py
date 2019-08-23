@@ -58,7 +58,7 @@ def train(train_loader, model, criterion,optimizer, epoch, writer=None):
         loss = criterion(output, data["label"].float())
         
         if writer is not None:
-            writer.add_scalar("Loss/train", loss.data.item(), epoch*len(train_loader)+i)
+            writer.add_scalar(f"Loss/train{world.base_lr}", loss.data.item(), epoch*len(train_loader)+i)
 
         losses.update(loss.data.item(), data["img0"].size(0))
 
