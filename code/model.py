@@ -104,6 +104,45 @@ class ITrackerModel(nn.Module):
 
 
 
+class ITrackerModel_try(nn.Module):
+
+
+    def __init__(self):
+        super(ITrackerModel, self).__init__()
+        # self.eyeleft1 = ItrackerImageModel()
+        # self.eyeleft2 = ItrackerImageModel()
+        # self.eyeright1 = ItrackerImageModel()
+        # self.eyeright2 = ItrackerImageModel()
+        self.eye = ItrackerImageModel()
+        self.eye2 = ItrackerImageModel()
+        # Joining both eyes
+        self.eyesFC = nn.Sequential(
+            nn.Linear(4*8*14*19, 128),
+            nn.ReLU(inplace=True),
+            )
+        # Joining everything
+        self.fc = nn.Sequential(
+            nn.Linear(128, 64), 
+            nn.ReLU(inplace=True),
+            nn.Linear(64, 2),
+            nn.ReLU(inplace=True)
+            )
+
+    def forward(self, img0, img1,img3,img4):
+        # Eye nets
+        xEyeL1 = self.eye(img0)
+        xEyeL2 = self.eye2(img1)
+        xEyeR1 = self.eye2(img3)
+        xEyeR2 = self.eye(img4)
+
+        # Cat and FC
+        # xEyes = torch.cat((xEyeL, xEyeR), 1)
+        # xEyes = self.eyesFC(xEyes)
+        x = torch.cat([xEyeL1, xEyeL2, xEyeR1, xEyeR2], dim=1)  
+        x = self.eyesFC(x)
+        x = self.fc(x)
+        return x
+
 
 
 if __name__ == "__main__":

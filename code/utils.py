@@ -55,6 +55,7 @@ def train(train_loader, model, criterion,optimizer, epoch, writer=None):
         # measure data loading time
         data_time.update(time.time() - end)
         output = model(data["img0"].float(), data["img1"].float(), data["img2"].float(), data["img3"].float())
+        print(output[0], data["label"][0])
         loss = criterion(output, data["label"].float())
         
         if writer is not None:
@@ -72,18 +73,18 @@ def train(train_loader, model, criterion,optimizer, epoch, writer=None):
         end = time.time()
 
         
-        if i % 5 == 0:
+        if i % 10 == 0 and i != 0:
             print('Epoch (train): [{0}][{1}/{2}]\t'
                 'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+                'Loss {loss.val:.4f} ({loss.avg:.4f})\t SAVED'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
                 data_time=data_time, loss=losses))
-            # save_checkpoint({
-            #         'epoch': epoch + 1,
-            #         'state_dict': model.state_dict(),
-            #         "best_prec1": loss.data.item(), 
-            #     }, True)
+            save_checkpoint({
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    "best_prec1": loss.data.item(), 
+                }, False)
 
 
 def validate(val_loader, model, criterion, epoch):
@@ -148,6 +149,56 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+
+class EarlyStopping:
+    """Early stops the training if validation loss doesn't improve after a given patience."""
+    def __init__(self, patience=10, verbose=False, delta=10):
+        """
+        Args:
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 7
+            verbose (bool): If True, prints a message for each validation loss improvement. 
+                            Default: False
+            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                            Default: 0
+        """
+        self.patience = patience
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_loss_min = np.Inf
+        self.delta = delta
+
+    def __call__(self, val_loss, model, epoch):
+
+        score = val_loss
+
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model, epoch)
+        elif score >= self.best_score + self.delta:
+            self.counter += 1
+            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model, epoch)
+            self.counter = 0
+
+    def save_checkpoint(self, val_loss, model, epoch):
+        '''Saves model when validation loss decrease.'''
+        print("SAVED")
+        if self.verbose:
+            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+        save_checkpoint({
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    "best_prec1": val_loss, 
+                }, True)
+        self.val_loss_min = val_loss
 
 # ===========================save and load=============================================
 

@@ -4,11 +4,13 @@ import utils
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import torch
-from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 import world
 from parser import args
-
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except:
+    from tensorboardX import SummaryWriter
 
 def syn_world(args):
     world.batch_size = args.batch_size
@@ -16,6 +18,7 @@ def syn_world(args):
     world.comment = args.comment    
     world.tensorboard = args.tensorboard
     world.epochs = args.epochs
+    world.base_lr = args.lr
 
 
 if __name__ == "__main__":
@@ -50,14 +53,16 @@ if __name__ == "__main__":
             except:
                 m.load_state_dict(state)
             epoch_before = saved['epoch']
+            print(">START EPOCH AT", epoch_before)
             best = saved['best_prec1']
         else:
             print('>Warning: Could not read checkpoint! start fresh!!')
 
     # define loss and optimizer
-    loss = nn.MSELoss()
+    # loss = nn.MSELoss(size_average=True)
+    loss = nn.L1Loss(size_average=True)
     opt = torch.optim.Adam(m.parameters(), 
-                        world.lr, 
+                        world.base_lr, 
                         # momentum=world.momentum, 
                         weight_decay=world.weight_decay)
     # switch to GPU
@@ -67,7 +72,10 @@ if __name__ == "__main__":
     
     # data format
     m = m.float()
-    
+
+    early_stop = utils.EarlyStopping(delta=0)
+    early_stop.best_score = best
+
     # training process
     if args.tensorboard:
         print(">ASK FOR tensorboard")
@@ -81,27 +89,27 @@ if __name__ == "__main__":
                 utils.train(data_train, m, loss, opt, epoch, w)
                 pred = utils.validate(data_test, m ,loss, epoch)
                 w.add_scalar(f"Loss/test{world.base_lr}", pred, epoch)
-                is_best = pred < best
-                best_pred = min(pred, best)
-                utils.save_checkpoint({
-                    'epoch': epoch + 1,
-                    'state_dict': m.state_dict(),
-                    "best_prec1": best_pred, 
-                }, is_best)
+                # is_best = pred < best
+                # best = min(pred, best)
+                # utils.save_checkpoint({
+                #     'epoch': epoch + 1,
+                #     'state_dict': m.state_dict(),
+                #     "best_prec1": pred, 
+                # }, is_best)
+                early_stop(pred, m, epoch)
+                if early_stop.early_stop:
+                    print(">DONE")
+                    break
     else:
-        for epoch in range(world.epochs):
+        for epoch in range(epoch_before, world.epochs):
                 utils.adjust_learning_rate(opt, epoch)
-                # print(epoch)
-                # print(len(opt.state_dict()["param_groups"]))
                 utils.train(data_train, m, loss, opt, epoch)
                 pred = utils.validate(data_test, m ,loss, epoch)
-                is_best = pred < best
-                best_pred = min(pred, best)
-                utils.save_checkpoint({
-                    'epoch': epoch + 1,
-                    'state_dict': m.state_dict(),
-                    "best_prec1": best_pred, 
-                }, is_best)
+                pred = 10
+                early_stop(pred, m, epoch)
+                if early_stop.early_stop:
+                    print(">DONE")
+                    break
 
 
 

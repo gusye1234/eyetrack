@@ -35,9 +35,7 @@ doLoad = True
 n_batch = 0
 comment = "test"
 tensorboard = False
-
 momentum = 0.9
-lr = 0.0001
 epochs = 100
 weight_decay = 1e-4
 workers = 4
