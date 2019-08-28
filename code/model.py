@@ -15,6 +15,7 @@ import torchvision.models as models
 import numpy as np
 import torch.utils.model_zoo as model_zoo
 from torchsummary import summary
+import world
 
 '''
 Pytorch model for the iTracker.
@@ -38,6 +39,17 @@ Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}
 
 '''
 
+# class DeepFix(nn.Module):
+#     def __init__(self):
+#         super(DeepFix, self).__init__()
+#         self.features = nn.Sequential(
+#             nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=0),
+#             nn.LeakyReLU(inplace=True),
+#             nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=0),
+#             nn.LeakyReLU(inplace=True),
+            
+#         )
+
 
 class ItrackerImageModel(nn.Module):
     # Used for both eyes (with shared weights) and the face (with unqiue weights)
@@ -45,15 +57,15 @@ class ItrackerImageModel(nn.Module):
         super(ItrackerImageModel, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=11, stride=4, padding=0),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2, groups=2),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.CrossMapLRN2d(size=5, alpha=0.0001, beta=0.75, k=1.0),
             nn.Conv2d(64, 32, kernel_size=5, stride=2, padding=1),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(inplace=True),
             nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=0),
             nn.ReLU(inplace=True),
             nn.Conv2d(16, 8, kernel_size=1, stride=1, padding=0),
@@ -81,10 +93,19 @@ class ITrackerModel(nn.Module):
             nn.ReLU(inplace=True),
             )
         # Joining everything
-        self.fc = nn.Sequential(
-            nn.Linear(128, 64), 
-            nn.ReLU(inplace=True),
-            nn.Linear(64, 2),
+        if world.useSigmoid:
+            self.fc = nn.Sequential(
+                nn.Linear(128, 64), 
+                nn.ReLU(inplace=True),
+                nn.Linear(64, 2),
+                nn.Sigmoid(),
+                )
+        else:
+            self.fc = nn.Sequential(
+                nn.Linear(128, 64), 
+                nn.ReLU(inplace=True),
+                nn.Linear(64, 2),
+                nn.ReLU(inplace=True),
             )
 
     def forward(self, img0, img1,img3,img4):
@@ -104,44 +125,44 @@ class ITrackerModel(nn.Module):
 
 
 
-class ITrackerModel_try(nn.Module):
+# class ITrackerModel_try(nn.Module):
 
 
-    def __init__(self):
-        super(ITrackerModel, self).__init__()
-        # self.eyeleft1 = ItrackerImageModel()
-        # self.eyeleft2 = ItrackerImageModel()
-        # self.eyeright1 = ItrackerImageModel()
-        # self.eyeright2 = ItrackerImageModel()
-        self.eye = ItrackerImageModel()
-        self.eye2 = ItrackerImageModel()
-        # Joining both eyes
-        self.eyesFC = nn.Sequential(
-            nn.Linear(4*8*14*19, 128),
-            nn.ReLU(inplace=True),
-            )
-        # Joining everything
-        self.fc = nn.Sequential(
-            nn.Linear(128, 64), 
-            nn.ReLU(inplace=True),
-            nn.Linear(64, 2),
-            nn.ReLU(inplace=True)
-            )
+#     def __init__(self):
+#         super(ITrackerModel_try, self).__init__()
+#         # self.eyeleft1 = ItrackerImageModel()
+#         # self.eyeleft2 = ItrackerImageModel()
+#         # self.eyeright1 = ItrackerImageModel()
+#         # self.eyeright2 = ItrackerImageModel()
+#         self.eye = ItrackerImageModel()
+#         self.eye2 = ItrackerImageModel()
+#         # Joining both eyes
+#         self.eyesFC = nn.Sequential(
+#             nn.Linear(4*8*14*19, 128),
+#             nn.ReLU(inplace=True),
+#             )
+#         # Joining everything
+#         self.fc = nn.Sequential(
+#             nn.Linear(128, 64), 
+#             nn.ReLU(inplace=True),
+#             nn.Linear(64, 2),
+#             nn.ReLU(inplace=True)
+#             )
 
-    def forward(self, img0, img1,img3,img4):
-        # Eye nets
-        xEyeL1 = self.eye(img0)
-        xEyeL2 = self.eye2(img1)
-        xEyeR1 = self.eye2(img3)
-        xEyeR2 = self.eye(img4)
+#     def forward(self, img0, img1,img3,img4):
+#         # Eye nets
+#         xEyeL1 = self.eye(img0)
+#         xEyeL2 = self.eye2(img1)
+#         xEyeR1 = self.eye2(img3)
+#         xEyeR2 = self.eye(img4)
 
-        # Cat and FC
-        # xEyes = torch.cat((xEyeL, xEyeR), 1)
-        # xEyes = self.eyesFC(xEyes)
-        x = torch.cat([xEyeL1, xEyeL2, xEyeR1, xEyeR2], dim=1)  
-        x = self.eyesFC(x)
-        x = self.fc(x)
-        return x
+#         # Cat and FC
+#         # xEyes = torch.cat((xEyeL, xEyeR), 1)
+#         # xEyes = self.eyesFC(xEyes)
+#         x = torch.cat([xEyeL1, xEyeL2, xEyeR1, xEyeR2], dim=1)  
+#         x = self.eyesFC(x)
+#         x = self.fc(x)
+#         return x
 
 
 

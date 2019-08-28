@@ -27,9 +27,13 @@ if useCuda:
 else:
     print(">USING CPU")
 
+label_scalar = 1000
+useSigmoid = False
 
+verbose = False
 CHECKPOINTS_PATH = "./checkpoints"
 filename = "checkpoint.pth.tar"
+weight_file = ""
 batch_size = 0
 doLoad = True
 n_batch = 0
@@ -38,5 +42,8 @@ tensorboard = False
 momentum = 0.9
 epochs = 100
 weight_decay = 1e-4
-workers = 4
+workers = 0
 base_lr = 0.0001
+
+if verbose:
+    print("world loading complete")

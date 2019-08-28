@@ -19,26 +19,35 @@ C = 1
 cores = multiprocessing.cpu_count() // 2
 cores = 1 if cores == 0 else cores
 
-
 class dataloader(Dataset):
-    def __init__(self, datapath = '../data', mode="train", transform=None):
-        assert mode in ["train", "test"]
+    def __init__(self, datapath = '../data', mode="train", transform=None, folder=None):
+        assert mode in ["train", "test", "val"]
         self.data_path = os.path.join(datapath, mode)
         self.mode = mode
         self.labels, self.data, self.length = self.getDataIndex()
         # self.mean, self.std = self.getStat()
         self.transform = transform if transform is not None else ToTensor()
+        self.folder = folder
 
     def getDataIndex(self):
         from glob import glob
-        table = glob(os.path.join(self.data_path, "*/*/Learn.csv"))
+        if self.folder is not None:
+            table = glob(os.path.join(self.data_path, "*/*/Learn.csv"))
+        else:
+            table = glob(os.path.join(self.data_path, "*/%s/Learn.csv" % str(self.folder)))
         eyesXY = {}
         total = 0
         for i in table:
             data = pd.read_csv(i)
             data = data[["cornerxy[0]", "cornerxy[1]"]]
             i = os.path.dirname(i)
-            eyesXY[i] = data.to_numpy()
+            if world.useSigmoid:
+                eyesXY[i] = data.to_numpy()/world.label_scalar
+                # print(">SCALAR labels by", world.label_scalar)
+            else:
+                eyesXY[i] = data.to_numpy()
+            print("max is", np.max(eyesXY[i], axis=0))
+            print("min is", np.min(eyesXY[i], axis=0))
             total += eyesXY[i].shape[0]
             print(">GOT %s DATA FROM" % eyesXY[i].shape[0] , i)
         order = []
@@ -116,15 +125,17 @@ class dataloader(Dataset):
         filename = self.data[idx]
         # print(filename)
         for j, name in enumerate(["%s_%d.png" % (filename, k) for k in [0, 1, 3,4]]):
-            res["img" + str(j)] = cv.imread(name)[..., 0:1]
+            try:
+                res["img" + str(j)] = cv.imread(name)[..., 0:1]
+            except:
+                print("No such png file:", name)
+                raise TypeError("File didn't exist")
         res["label"] = self.getLabel(filename)
         if self.transform:
             res = self.transform(res)
         else:
             pass
         return res
-
-
 
 
 

@@ -7,6 +7,8 @@ data/
 .vscode
 **/checkpoints
 **/runs
+**/.idea
+ssh/
 # C extensions
 *.so
 
