@@ -24,6 +24,7 @@ def syn_world(args):
     world.base_lr = args.lr
     world.useSigmoid = args.sigmoid
     world.weight_file = args.weights
+    world.resize = args.resize
     if args.eval and args.weights == "":
         raise IOError("You must choose a pretrained-weight file to start eval mode")
 
@@ -40,14 +41,14 @@ if __name__ == "__main__":
     world.filename = args.tag + world.filename
 
     # load data
-    tran = transforms.Compose([utils.Scale(), utils.ToTensor()])
+    tran = transforms.Compose([utils.Scale(), utils.resize(),utils.ToTensor()])
     data = dataloader(transform=tran)
     if len(data) == 0:
         print("Didn't find dataset.")
         raise ValueError("empty dataset")
     data_train = DataLoader(data, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
     world.n_batch = len(data_train)
-    data_test = dataloader(mode="test", transform=tran)
+    data_test = dataloader(mode="test", transform=tran, folder=3)
     data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
     if world.verbose:
         print("loaded data")

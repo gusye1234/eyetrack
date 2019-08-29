@@ -39,9 +39,30 @@ class Scale:
     def __call__(self, sample):
         for i in sample:
             if "img" in i:
+                # print("SHAPE:", sample[i].shape)
                 sample[i] = (sample[i] - self.mean) / self.std
         return sample
 
+class resize:
+    def __init__(self, dsize=256):
+        self.dsize = dsize
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = cv.resize(sample[i], dsize=(self.dsize, self.dsize)).reshape((256,256,1))
+                # print(sample[i].shape)
+        return sample
+
+class Scale_255:
+    def __init__(self):
+        self.mean = 127.5
+        self.std = 127.5
+
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = (sample[i] - self.mean)/self.std
+        return sample
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -255,7 +276,10 @@ def load_checkpoint(filename='checkpoint.pth.tar'):
 def make_sample(data_sample):
     from torchvision.utils import make_grid
     for i in range(4):
-        data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 576, 720)
+        if world.resize == False:
+            data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 576, 720)
+        else:
+            data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 256, 256)
     img = torch.cat([data_sample['img0'], data_sample['img1'], data_sample['img2'], data_sample['img3']], dim=0)
     img = make_grid(img)
     return img
@@ -289,6 +313,7 @@ def show_config():
         print("[device]", "CPU")
     if world.useSigmoid:
         print("[use Sigmoid]: True")
+    print("[Resize]", world.resize)
     print("---------------------")
 
 
