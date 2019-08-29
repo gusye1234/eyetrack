@@ -26,4 +26,6 @@ def args():
     parser.add_argument("--delta", type=float, default=0.001, help="Tolerance for early stoping")
     parser.add_argument("--tag", type=str, default='', help="suffix of the weight file")
     parser.add_argument("--eval", type=str2bool, default=False, help="start eval mode")
+    parser.add_argument("--evalFolder", type=int, default=3, help="choose a test folder to generate prediction")
+    parser.add_argument("--resize", type=str2bool, default=False, help="resize picture to 256X256 (original 576X720)")
     return parser

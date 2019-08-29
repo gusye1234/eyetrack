@@ -43,9 +43,30 @@ class Scale:
         return sample
 
 
+class Resize:
+    def __init__(self, dsize=256):
+        self.dsize = dsize
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = cv.resize(sample[i], dsize=(self.dsize, self.dsize)).reshape((self.dsize, self.dsize, 1))
+        return sample
+
+class Scale_255:
+    def __init__(self):
+        self.mean = 127.5
+        self.std = 127.5
+
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = (sample[i] - self.mean)/self.std
+        return sample
+
+
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = world.base_lr * (0.1 ** (epoch // 30))
+    lr = world.base_lr * (0.1 ** (epoch // 60))
     print(f"Epoch (train): [{epoch}]-------learning_rate-------{lr}")
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -132,14 +153,12 @@ def validate(val_loader, model, criterion, epoch):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
-        if i % 10 == 0:
-            print('Epoch (val): [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Error L2 {lossLin.val:.4f} ({lossLin.avg:.4f})\t'.format(
-                epoch, i, len(val_loader), batch_time=batch_time,
-                loss=losses, lossLin=lossesLin))
+    print('Epoch (val): [{0}][{1}/{2}]\t'
+            'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+            'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+            'Error L2 {lossLin.val:.4f} ({lossLin.avg:.4f})\t'.format(
+        epoch, i, len(val_loader), batch_time=batch_time,
+        loss=losses, lossLin=lossesLin))
 
     return losses.avg
 
@@ -239,7 +258,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
 
 def load_checkpoint(filename='checkpoint.pth.tar'):
-    filename = os.path.join(world.CHECKPOINTS_PATH, filename)
+    # filename = os.path.join(world.CHECKPOINTS_PATH, filename)
     if not os.path.isfile(filename):
         return None
     try:
@@ -255,7 +274,10 @@ def load_checkpoint(filename='checkpoint.pth.tar'):
 def make_sample(data_sample):
     from torchvision.utils import make_grid
     for i in range(4):
-        data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 576, 720)
+        if world.resize == False:
+            data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 576, 720)
+        else:
+            data_sample['img%d' % (i)] = data_sample['img%d' % (i)].view(-1, 1, 256, 256)
     img = torch.cat([data_sample['img0'], data_sample['img1'], data_sample['img2'], data_sample['img3']], dim=0)
     img = make_grid(img)
     return img
@@ -289,6 +311,7 @@ def show_config():
         print("[device]", "CPU")
     if world.useSigmoid:
         print("[use Sigmoid]: True")
+    print("[Resize to 256]", world.resize)
     print("---------------------")
 
 

@@ -44,6 +44,7 @@ epochs = 100
 weight_decay = 1e-4
 workers = 0
 base_lr = 0.0001
+resize=False
 
 if verbose:
     print("world loading complete")

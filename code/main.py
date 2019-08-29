@@ -24,6 +24,7 @@ def syn_world(args):
     world.base_lr = args.lr
     world.useSigmoid = args.sigmoid
     world.weight_file = args.weights
+    world.resize = args.resize
     if args.eval and args.weights == "":
         raise IOError("You must choose a pretrained-weight file to start eval mode")
 
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     if world.useSigmoid:
         world.filename = "checkpoint_sigmoid.pth.tar"
     if args.tag == '':
-        args.tag = time.strftime("%D-%H:%M")
+        args.tag = time.strftime("%m-%d-%H:%M")
     world.filename = args.tag + world.filename
 
     # load data
@@ -47,8 +48,13 @@ if __name__ == "__main__":
         raise ValueError("empty dataset")
     data_train = DataLoader(data, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
     world.n_batch = len(data_train)
-    data_test = dataloader(mode="test", transform=tran)
-    data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
+    if args.eval == False:
+        data_test = dataloader(mode="test", transform=tran)
+        data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
+    else:
+        data_test = dataloader(mode="val", transform=tran, folder=args.evalFolder)
+        data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=False, num_workers=world.workers)
+        print(">EVAL FOLDER:", args.evalFolder)
     if world.verbose:
         print("loaded data")
 
@@ -67,7 +73,7 @@ if __name__ == "__main__":
         saved = utils.load_checkpoint(world.weight_file)
         if saved:
             print(
-                '>Loading checkpoint for epoch %05d with loss %.5f (which is the mean squared error not the actual linear error)...' % (
+                '>Loading checkpoint for epoch %05d with loss %.5f ...' % (
                 saved['epoch'], saved['best_prec1']))
             state = saved['state_dict']
             try:

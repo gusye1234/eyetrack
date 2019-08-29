@@ -88,10 +88,16 @@ class ITrackerModel(nn.Module):
         self.eyeright1 = ItrackerImageModel()
         self.eyeright2 = ItrackerImageModel()
         # Joining both eyes
-        self.eyesFC = nn.Sequential(
-            nn.Linear(4*8*14*19, 128),
-            nn.ReLU(inplace=True),
-            )
+        if world.resize == False:
+            self.eyesFC = nn.Sequential(
+                nn.Linear(4*8*14*19, 128),
+                nn.ReLU(inplace=True),
+                )
+        else:
+            self.eyesFC = nn.Sequential(
+                nn.Linear(4*8*4*4, 128),
+                nn.ReLU(inplace=True),
+                )
         # Joining everything
         if world.useSigmoid:
             self.fc = nn.Sequential(

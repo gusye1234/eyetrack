@@ -24,17 +24,18 @@ class dataloader(Dataset):
         assert mode in ["train", "test", "val"]
         self.data_path = os.path.join(datapath, mode)
         self.mode = mode
+        self.folder = folder
         self.labels, self.data, self.length = self.getDataIndex()
         # self.mean, self.std = self.getStat()
         self.transform = transform if transform is not None else ToTensor()
-        self.folder = folder
+        
 
     def getDataIndex(self):
         from glob import glob
-        if self.folder is not None:
+        if self.folder is None:
             table = glob(os.path.join(self.data_path, "*/*/Learn.csv"))
         else:
-            table = glob(os.path.join(self.data_path, "*/%s/Learn.csv" % str(self.folder)))
+            table = glob(os.path.join(self.data_path, "%s/*/Learn.csv" % str(self.folder)))
         eyesXY = {}
         total = 0
         for i in table:
@@ -46,8 +47,8 @@ class dataloader(Dataset):
                 # print(">SCALAR labels by", world.label_scalar)
             else:
                 eyesXY[i] = data.to_numpy()
-            print("max is", np.max(eyesXY[i], axis=0))
-            print("min is", np.min(eyesXY[i], axis=0))
+            # print("max is", np.max(eyesXY[i], axis=0))
+            # print("min is", np.min(eyesXY[i], axis=0))
             total += eyesXY[i].shape[0]
             print(">GOT %s DATA FROM" % eyesXY[i].shape[0] , i)
         order = []

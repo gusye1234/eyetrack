@@ -1,8 +1,9 @@
 matplotlib==3.1.1
+numpy==1.16.4
 torchvision==0.4.0a0+6b959ee
 torch==1.2.0
 pandas==0.24.2
-torchsummary==1.5.1
 opencv_python==4.1.0.25
-numpy==1.16.4
+torchsummary==1.5.1
 Pillow==6.1.0
+tensorboardX==1.8
