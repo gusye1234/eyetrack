@@ -173,4 +173,4 @@ class ITrackerModel(nn.Module):
 
 
 if __name__ == "__main__":
-    summary(ItrackerImageModel(), input_size=(1, 576, 720))
+    summary(ItrackerImageModel(), input_size=(1, 256,256))

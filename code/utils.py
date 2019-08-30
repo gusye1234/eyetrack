@@ -39,9 +39,30 @@ class Scale:
     def __call__(self, sample):
         for i in sample:
             if "img" in i:
+                # print("SHAPE:", sample[i].shape)
                 sample[i] = (sample[i] - self.mean) / self.std
         return sample
 
+class resize:
+    def __init__(self, dsize=256):
+        self.dsize = dsize
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = cv.resize(sample[i], dsize=(self.dsize, self.dsize)).reshape((256,256,1))
+                # print(sample[i].shape)
+        return sample
+
+class Scale_255:
+    def __init__(self):
+        self.mean = 127.5
+        self.std = 127.5
+
+    def __call__(self, sample):
+        for i in sample:
+            if "img" in i:
+                sample[i] = (sample[i] - self.mean)/self.std
+        return sample
 
 class Resize:
     def __init__(self, dsize=256):

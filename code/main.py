@@ -41,7 +41,7 @@ if __name__ == "__main__":
     world.filename = args.tag + world.filename
 
     # load data
-    tran = transforms.Compose([utils.Scale(), utils.ToTensor()])
+    tran = transforms.Compose([utils.Scale(), utils.resize(),utils.ToTensor()])
     data = dataloader(transform=tran)
     if len(data) == 0:
         print("Didn't find dataset.")
