@@ -279,7 +279,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
 
 def load_checkpoint(filename='checkpoint.pth.tar'):
-    # filename = os.path.join(world.CHECKPOINTS_PATH, filename)
+    filename = os.path.join(world.CHECKPOINTS_PATH, filename)
     if not os.path.isfile(filename):
         return None
     try:
@@ -333,6 +333,7 @@ def show_config():
     if world.useSigmoid:
         print("[use Sigmoid]: True")
     print("[Resize to 256]", world.resize)
+    print("[intermediate activation]", world.activation)
     print("---------------------")
 
 

@@ -10,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import world
 from utils import ToTensor
-
+import matplotlib.pyplot as plt
 
 W = 480
 H = 640
@@ -43,7 +43,10 @@ class dataloader(Dataset):
             data = data[["cornerxy[0]", "cornerxy[1]"]]
             i = os.path.dirname(i)
             if world.useSigmoid:
-                eyesXY[i] = data.to_numpy()/world.label_scalar
+                eyesXY[i] = data.to_numpy()
+                eyesXY[i][:,0] = eyesXY[i][:,0]/world.scalar[0]
+                eyesXY[i][:,1] = eyesXY[i][:,1]/world.scalar[1]
+                # eyesXY[i] = data.to_numpy()/world.label_scalar
                 # print(">SCALAR labels by", world.label_scalar)
             else:
                 eyesXY[i] = data.to_numpy()
@@ -52,9 +55,26 @@ class dataloader(Dataset):
             total += eyesXY[i].shape[0]
             print(">GOT %s DATA FROM" % eyesXY[i].shape[0] , i)
         order = []
+        plot_dist = None
         for i in list(eyesXY):
             length = eyesXY[i].shape[0]
             order += [ os.path.join(i, str(j)) for j in range(1, length+1)]
+            if plot_dist is None:
+                plot_dist = eyesXY[i]
+            else:
+                plot_dist = np.vstack([plot_dist, eyesXY[i]])
+        # plt.scatter(plot_dist[:,0], plot_dist[:,1], s=5,c="black")
+        # plt.xlabel("width")
+        # plt.ylabel("height")
+        # plt.grid()
+        # plt.savefig(self.mode+".png")
+        # plt.close()
+        # plt.scatter(plot_dist[:,0]*800, plot_dist[:,1]*600, s=5,c="black")
+        # plt.xlabel("width")
+        # plt.ylabel("height")
+        # plt.grid()
+        # plt.savefig(self.mode+"_before.png")
+        # plt.close()
         # random.shuffle(order)
         try:
             assert len(order) == total

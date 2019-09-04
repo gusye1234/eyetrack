@@ -8,7 +8,8 @@ from torch import nn
 import world
 from parser import args
 import time
-from eval import eval
+from eval import eval, generate_heatmap
+import numpy as np
 try:
     from torch.utils.tensorboard import SummaryWriter
 except:
@@ -25,8 +26,14 @@ def syn_world(args):
     world.useSigmoid = args.sigmoid
     world.weight_file = args.weights
     world.resize = args.resize
+    world.collect = args.collect
+    world.activation = args.activation
+    if world.activation not in ["tanh", "sigmoid", "none"]:
+        raise TypeError("Please choose a activation function in [\"tanh\", \"sigmoid\", \"none\"]")
     if args.eval and args.weights == "":
         raise IOError("You must choose a pretrained-weight file to start eval mode")
+    if args.eval == False and args.collect:
+        raise TypeError("Can't collect intermediate data without eval mode opened")
 
 if __name__ == "__main__":
     # load config
@@ -36,12 +43,11 @@ if __name__ == "__main__":
         print("loaded configs")
     if world.useSigmoid:
         world.filename = "checkpoint_sigmoid.pth.tar"
-    if args.tag == '':
-        args.tag = time.strftime("%m-%d-%H:%M")
+    args.tag = time.strftime("%m-%d-%H:%M") + args.opt + str(args.lr) + "-" + world.comment + "_"
     world.filename = args.tag + world.filename
 
     # load data
-    tran = transforms.Compose([utils.Scale(), utils.resize(),utils.ToTensor()])
+    tran = transforms.Compose([utils.Scale(), utils.ToTensor()])
     data = dataloader(transform=tran)
     if len(data) == 0:
         print("Didn't find dataset.")
@@ -52,7 +58,7 @@ if __name__ == "__main__":
         data_test = dataloader(mode="test", transform=tran)
         data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=True, num_workers=world.workers)
     else:
-        data_test = dataloader(mode="val", transform=tran, folder=args.evalFolder)
+        data_test = dataloader(mode="test", transform=tran, folder=args.evalFolder)
         data_test = DataLoader(data_test, batch_size=world.batch_size, shuffle=False, num_workers=world.workers)
         print(">EVAL FOLDER:", args.evalFolder)
     if world.verbose:
@@ -118,7 +124,7 @@ if __name__ == "__main__":
         if args.tensorboard:
             print(">ASK FOR tensorboard")
             print("use command \'tensorboard --logdir=runs\' to run it")
-            with SummaryWriter("/output/"+ "runs/"+time.strftime("%m-%d-%H:%M:%S-") + args.opt + str(args.lr) + "-" + args.comment) as w:
+            with SummaryWriter("/output/"+ "runs/"+time.strftime("%m-%d-%H:%M:%S-") + args.opt + str(args.lr) + "-" + world.comment) as w:
                 w.add_image("image", img, 0)
                 for epoch in range(world.epochs):
                     utils.adjust_learning_rate(opt, epoch)
@@ -149,4 +155,9 @@ if __name__ == "__main__":
                     print(">DONE")
                     break
     else:
-        eval(test_loader=data_test, model=m, criterion=loss)
+        if args.generating:
+            generate_heatmap(data_test, m, loss, args.evalFolder)
+        else:
+            eval(test_loader=data_test, model=m, criterion=loss)
+        np.save("/output/middle.npy", np.concatenate(m.collect, axis=0))
+        

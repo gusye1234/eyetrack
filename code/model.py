@@ -88,15 +88,26 @@ class ITrackerModel(nn.Module):
         self.eyeright1 = ItrackerImageModel()
         self.eyeright2 = ItrackerImageModel()
         # Joining both eyes
+        # if world.resize == False:
+        #     self.eyesFC = nn.Sequential(
+        #         nn.Linear(4*8*14*19, 128),
+        #         nn.ReLU(inplace=True),
+        #         )
+        # else:
+        #     self.eyesFC = nn.Sequential(
+        #         nn.Linear(4*8*4*4, 128),
+        #         nn.ReLU(inplace=True),
+        #         )
+
         if world.resize == False:
             self.eyesFC = nn.Sequential(
                 nn.Linear(4*8*14*19, 128),
-                nn.ReLU(inplace=True),
+                # nn.Sigmoid(),
                 )
         else:
             self.eyesFC = nn.Sequential(
                 nn.Linear(4*8*4*4, 128),
-                nn.ReLU(inplace=True),
+                # nn.Sigmoid(),
                 )
         # Joining everything
         if world.useSigmoid:
@@ -113,6 +124,13 @@ class ITrackerModel(nn.Module):
                 nn.Linear(64, 2),
                 nn.ReLU(inplace=True),
             )
+        if world.activation == "tanh":
+            self.f = nn.Tanh()
+        elif world.activation == "sigmoid":
+            self.f = nn.Sigmoid()
+        else:
+            self.f = None
+        self.collect = []
 
     def forward(self, img0, img1,img3,img4):
         # Eye nets
@@ -126,6 +144,10 @@ class ITrackerModel(nn.Module):
         # xEyes = self.eyesFC(xEyes)
         x = torch.cat([xEyeL1, xEyeL2, xEyeR1, xEyeR2], dim=1)  
         x = self.eyesFC(x)
+        if self.f is not None:
+            x = self.f(x)
+        if world.collect:
+            self.collect.append(x.cpu().detach().numpy())
         x = self.fc(x)
         return x
 
@@ -173,4 +195,4 @@ class ITrackerModel(nn.Module):
 
 
 if __name__ == "__main__":
-    summary(ItrackerImageModel(), input_size=(1, 256,256))
+    summary(ItrackerImageModel(), input_size=(1, 576, 720))

@@ -28,6 +28,7 @@ else:
     print(">USING CPU")
 
 label_scalar = 1000
+scalar = [800, 600]
 useSigmoid = False
 
 verbose = False
@@ -40,11 +41,13 @@ n_batch = 0
 comment = "test"
 tensorboard = False
 momentum = 0.9
-epochs = 100
+epochs = 240
 weight_decay = 1e-4
 workers = 0
 base_lr = 0.0001
 resize=False
+collect=False
+activation="none"
 
 if verbose:
     print("world loading complete")

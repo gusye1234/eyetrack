@@ -95,9 +95,14 @@ data
 ```
 
 * `cd code && python main.py`
+
 * follow the error traceback and see what's going on 😁
 
+* There are some launch command examples:
 
+  * `python main.py --doload=no --tensorboard=yes --lr=5e-4 --sigmoid=yes --opt=adam --delta=0.005 --tag="L2_adam_0.0005"`
+
+  * `python main.py --doload=yes --eval=yes --weights="./checkpoints/best_L2_adam_0.0005checkpoint_sigmoid.pth-2.tar" --evalFolder=22 --sigmoid=yes`
 
 ### TODO
 
