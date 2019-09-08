@@ -12,6 +12,7 @@ import world
 from utils import ToTensor
 import matplotlib.pyplot as plt
 
+
 W = 480
 H = 640
 C = 1
@@ -20,7 +21,7 @@ cores = multiprocessing.cpu_count() // 2
 cores = 1 if cores == 0 else cores
 
 class dataloader(Dataset):
-    def __init__(self, datapath = '../data', mode="train", transform=None, folder=None):
+    def __init__(self, datapath = '/data/gusye/new/DATA', mode="train", transform=None, folder=None):
         assert mode in ["train", "test", "val"]
         self.data_path = os.path.join(datapath, mode)
         self.mode = mode
@@ -28,7 +29,6 @@ class dataloader(Dataset):
         self.labels, self.data, self.length = self.getDataIndex()
         # self.mean, self.std = self.getStat()
         self.transform = transform if transform is not None else ToTensor()
-        
 
     def getDataIndex(self):
         from glob import glob
@@ -43,10 +43,7 @@ class dataloader(Dataset):
             data = data[["cornerxy[0]", "cornerxy[1]"]]
             i = os.path.dirname(i)
             if world.useSigmoid:
-                eyesXY[i] = data.to_numpy()
-                eyesXY[i][:,0] = eyesXY[i][:,0]/world.scalar[0]
-                eyesXY[i][:,1] = eyesXY[i][:,1]/world.scalar[1]
-                # eyesXY[i] = data.to_numpy()/world.label_scalar
+                eyesXY[i] = data.to_numpy()/world.label_scalar
                 # print(">SCALAR labels by", world.label_scalar)
             else:
                 eyesXY[i] = data.to_numpy()
@@ -63,17 +60,19 @@ class dataloader(Dataset):
                 plot_dist = eyesXY[i]
             else:
                 plot_dist = np.vstack([plot_dist, eyesXY[i]])
+        # print(">MEAN", np.mean(plot_dist*np.array([800,600]), axis=0))
+        # print(">STD", np.std(plot_dist*np.array([800,600]), axis=0))
         # plt.scatter(plot_dist[:,0], plot_dist[:,1], s=5,c="black")
         # plt.xlabel("width")
         # plt.ylabel("height")
         # plt.grid()
-        # plt.savefig(self.mode+".png")
+        # plt.savefig("/output/" + self.mode+".png")
         # plt.close()
         # plt.scatter(plot_dist[:,0]*800, plot_dist[:,1]*600, s=5,c="black")
         # plt.xlabel("width")
         # plt.ylabel("height")
         # plt.grid()
-        # plt.savefig(self.mode+"_before.png")
+        # plt.savefig("/output/" + self.mode+"_before.png")
         # plt.close()
         # random.shuffle(order)
         try:
@@ -145,12 +144,20 @@ class dataloader(Dataset):
         res = {}
         filename = self.data[idx]
         # print(filename)
-        for j, name in enumerate(["%s_%d.png" % (filename, k) for k in [0, 1, 3,4]]):
-            try:
-                res["img" + str(j)] = cv.imread(name)[..., 0:1]
-            except:
-                print("No such png file:", name)
-                raise TypeError("File didn't exist")
+        if world.resize:
+            for j, name in enumerate(["%s_%d_256.png" % (filename, k) for k in [0, 1, 3,4]]):
+                try:
+                    res["img" + str(j)] = cv.imread(name)[..., 0:1]
+                except:
+                    print("No such png file:", name)
+                    raise TypeError("File didn't exist")
+        else:
+            for j, name in enumerate(["%s_%d.png" % (filename, k) for k in [0, 1, 3,4]]):
+                try:
+                    res["img" + str(j)] = cv.imread(name)[..., 0:1]
+                except:
+                    print("No such png file:", name)
+                    raise TypeError("File didn't exist")
         res["label"] = self.getLabel(filename)
         if self.transform:
             res = self.transform(res)

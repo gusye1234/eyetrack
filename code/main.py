@@ -159,5 +159,6 @@ if __name__ == "__main__":
             generate_heatmap(data_test, m, loss, args.evalFolder)
         else:
             eval(test_loader=data_test, model=m, criterion=loss)
-        np.save("/output/middle.npy", np.concatenate(m.collect, axis=0))
+        if world.collect:
+            np.save("/output/middle.npy", np.concatenate(m.collect, axis=0))
         

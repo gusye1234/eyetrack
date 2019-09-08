@@ -9,8 +9,6 @@ import pandas as pd
 import os
 import numpy as np
 import cv2 as cv
-# cv.namedWindow("ok", cv.WINDOW_AUTOSIZE)
-# cv.namedWindow("ok", cv.WINDOW_AUTOSIZE)
 
 def eval(test_loader, model, criterion):
     batch_time = AverageMeter()
@@ -43,8 +41,10 @@ def eval(test_loader, model, criterion):
     predict = predict[["x", "y"]]
     predict.to_csv( os.path.join(world.CHECKPOINTS_PATH, "predict.csv"))
 
-def generate_heatmap(test_loader, model, criterion):
+
+def generate_heatmap(test_loader, model, criterion, folder):
     model.eval()
+    os.makedirs("/output/vis_%d"%folder, 0o777)
     for i, data in enumerate(test_loader):
         for name in data:
             if "img" in name:
@@ -52,7 +52,7 @@ def generate_heatmap(test_loader, model, criterion):
         output = model(data["img0"].float(), data["img1"].float(), data["img2"].float(), data["img3"].float())
         # loss = criterion(output, data["label"].float())
         # loss.backward()
-        output.backward(torch.Tensor(np.ones((1,2))*0.5))
+        output.backward(torch.Tensor(np.ones((1,2))*0.5).cuda())
         eyes = []
         print(i)
         for name in data:
@@ -84,8 +84,9 @@ def generate_heatmap(test_loader, model, criterion):
             img2 = np.concatenate([eyes[1], eyes[3]], axis=1)
             img = np.concatenate([img, img2], axis=0)
             img = cv.resize(img, (720,576))
-            cv.imshow("ok", img)
-            cv.waitKey(10)
+            # cv.imshow("ok", img)
+            # cv.waitKey(10)
+            cv.imwrite("/output/vis_%d/%d.png" % (folder, i), img)
 
 
 def heat_map(grad, image):
@@ -98,11 +99,3 @@ def heat_map(grad, image):
     cv.imwrite("see.png", heat_img)
     img_add = cv.addWeighted(img, 0.7, heat_img, 0.3, 0)
     return img_add
-
-# norm_img = np.zeros(gray_img.shape)        
-# cv2.normalize(gray_img , norm_img, 0, 255, cv2.NORM_MINMAX)
-# norm_img = np.asarray(norm_img, dtype=np.uint8)
-# heat_img = cv2.applyColorMap(norm_img, cv2.COLORMAP_JET) # 注意此处的三通道热力图是cv2专有的GBR排列
-# heat_img = cv2.cvtColor(heat_img, cv2.COLOR_BGR2RGB)# 将BGR图像转为RGB图像
-# img_add = cv2.addWeighted(org_img, 0.3, heat_img, 0.7, 0)
-

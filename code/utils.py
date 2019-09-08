@@ -39,30 +39,9 @@ class Scale:
     def __call__(self, sample):
         for i in sample:
             if "img" in i:
-                # print("SHAPE:", sample[i].shape)
                 sample[i] = (sample[i] - self.mean) / self.std
         return sample
 
-class resize:
-    def __init__(self, dsize=256):
-        self.dsize = dsize
-    def __call__(self, sample):
-        for i in sample:
-            if "img" in i:
-                sample[i] = cv.resize(sample[i], dsize=(self.dsize, self.dsize)).reshape((256,256,1))
-                # print(sample[i].shape)
-        return sample
-
-class Scale_255:
-    def __init__(self):
-        self.mean = 127.5
-        self.std = 127.5
-
-    def __call__(self, sample):
-        for i in sample:
-            if "img" in i:
-                sample[i] = (sample[i] - self.mean)/self.std
-        return sample
 
 class Resize:
     def __init__(self, dsize=256):
@@ -106,6 +85,7 @@ def train(train_loader, model, criterion, optimizer, epoch, writer=None):
     end = time.time()
     # n_batch = (len(train_loader) // world.batch_size) + 1
     # for i, (row, imFace, imEyeL, imEyeR, faceGrid, gaze) in enumerate(train_loader):
+    show = len(train_loader)//5
     for i, data in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -127,7 +107,7 @@ def train(train_loader, model, criterion, optimizer, epoch, writer=None):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % 10 == 0 and i != 0:
+        if i % show == 0 and i != 0:
             print('Epoch (train): [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
@@ -279,7 +259,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
 
 def load_checkpoint(filename='checkpoint.pth.tar'):
-    filename = os.path.join(world.CHECKPOINTS_PATH, filename)
+    # filename = os.path.join(world.CHECKPOINTS_PATH, filename)
     if not os.path.isfile(filename):
         return None
     try:
