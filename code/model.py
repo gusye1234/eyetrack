@@ -195,4 +195,11 @@ class ITrackerModel(nn.Module):
 
 
 if __name__ == "__main__":
+    from torchviz import make_dot
     summary(ItrackerImageModel(), input_size=(1, 576, 720))
+    x = torch.zeros(1,1,576,720)
+    model = ItrackerImageModel()
+    out = model(x)
+    
+    a = make_dot(out.mean(), params=dict(model.named_parameters()))
+    a.save("ok.png")
