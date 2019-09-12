@@ -44,7 +44,15 @@ optional arguments:
   --delta DELTA         Tolerance for early stoping
   --tag TAG             suffix of the weight file
   --eval EVAL           start eval mode
+  --evalFolder EVALFOLDER
+                        choose a test folder to generate prediction
   --resize RESIZE       resize picture to 256X256 (original 576X720)
+  --generating GENERATING
+                        generating the gradient heat map over the origin image
+  --collect COLLECT     collect the intermediate embedding to middle.npy
+  --activation ACTIVATION
+                        choose the activation function to generate
+                        intermediate embedding
 ```
 
 * 2019.8.30: Trained a bunch of models, for now, best predicting error on test set is about **10 pixels**, still working on it🤯
