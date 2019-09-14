@@ -151,6 +151,47 @@ class ITrackerModel(nn.Module):
         x = self.fc(x)
         return x
 
+class experiment(nn.Module):
+    def __init__(self):
+        super(experiment, self).__init__()
+        # if world.resize == False:
+        #     self.eyesFC = nn.Sequential(
+        #         nn.Linear(4*8*14*19, 128),
+        #         # nn.Sigmoid(),
+        #         )
+        # else:
+        #     self.eyesFC = nn.Sequential(
+        #         nn.Linear(4*8*4*4, 128),
+        #         # nn.Sigmoid(),
+        #         )
+        # # Joining everything
+        if world.useSigmoid:
+            self.fc = nn.Sequential(
+                nn.Linear(128, 64), 
+                nn.ReLU(inplace=True),
+                nn.Linear(64, 2),
+                nn.Sigmoid(),
+                )
+        else:
+            self.fc = nn.Sequential(
+                nn.Linear(128, 64), 
+                nn.ReLU(inplace=True),
+                nn.Linear(64, 2),
+                nn.ReLU(inplace=True),
+            )
+        # if world.activation == "tanh":
+        #     self.f = nn.Tanh()
+        # elif world.activation == "sigmoid":
+        #     self.f = nn.Sigmoid()
+        # else:
+        #     self.f = None
+            
+    def forward(self, x):
+        # x = self.eyesFC(x)
+        # if self.f is not None:
+        #     x = self.f(x)
+        x = self.fc(x)
+        return x
 
 
 # class ITrackerModel_try(nn.Module):

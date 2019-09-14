@@ -28,7 +28,7 @@ else:
 
 label_scalar = 1000
 scalar = [800, 600]
-useSigmoid = False
+useSigmoid = True
 
 verbose = False
 CHECKPOINTS_PATH = "./checkpoints"

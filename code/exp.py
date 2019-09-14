@@ -26,7 +26,6 @@ if __name__ == "__main__":
         # os.chdir(folder)
         
         x = np.load( os.path.join(folder, "middle.npy"))
-        x = x*100
         y = pd.read_csv(os.path.join(folder, "predict.csv"))[["x", "y"]].to_numpy()
         folder = os.path.basename(folder)
         print(folder)
@@ -37,9 +36,16 @@ if __name__ == "__main__":
         else:
             X = np.vstack([X, x])
             Y = np.vstack([Y, y])
+    Y = Y*1000
     reg.fit(X,Y)
-    pred = reg.predict(x)
-    loss = np.mean(np.sqrt(np.sum((y-pred)**2, axis=1)))
+    pred = reg.predict(X)
+    loss = np.mean(np.sqrt(np.sum((Y-pred)**2, axis=1)))
+    
+    importance = np.array(reg.feature_importances_)*10000
+    
+    most_value = np.argsort(importance)[-10:]
+    print(most_value)
+    print(importance[most_value])
     
     print("LOSS", loss)
     plt.scatter(range(x.shape[1]), reg.feature_importances_*1000, c=c[i], marker=mark[i], s=20, label=folder)
@@ -47,3 +53,5 @@ if __name__ == "__main__":
     plt.legend()
         # plt.title(folder)
     plt.show()
+    
+ 
