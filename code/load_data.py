@@ -21,7 +21,7 @@ cores = multiprocessing.cpu_count() // 2
 cores = 1 if cores == 0 else cores
 
 class dataloader(Dataset):
-    def __init__(self, datapath = '/data/gusye/new/DATA', mode="train", transform=None, folder=None):
+    def __init__(self, datapath = '../data', mode="train", transform=None, folder=None):
         assert mode in ["train", "test", "val"]
         self.data_path = os.path.join(datapath, mode)
         self.mode = mode
