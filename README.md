@@ -1,7 +1,6 @@
 ## Explain the eye-tracking model
 
-[TOC]
-### introduction
+### Introduction
 
 (Chinese)
 
@@ -9,7 +8,7 @@
 
  
 
-### developing environment
+### Developing environment
 
 * macOS Mojave version 10.14
 * Python 3.6.3
@@ -19,13 +18,13 @@
 
 
 
-### model
+### Model
 
 *  Refer to part of iTracker feaure extractor from [CSALI MIT](https://github.com/CSAILVision/GazeCapture)
 
 
 
-### install
+### Install
 
 * `pip install requirements.txt`
 * **prepare data**
