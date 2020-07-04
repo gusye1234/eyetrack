@@ -1,5 +1,6 @@
 ## Explain the eye-tracking model
 
+[TOC]
 ### Introduction
 
 (Chinese)
@@ -143,6 +144,23 @@ optional arguments:
 * add vis tools and experiment model to analyze
 
 <img src="./imgs/result.png" alt="100% " style="zoom:100%;" />
+
+### ideas
+
+1. 对于神经网络的每组权重, 用位串来编码, 使用遗传算法来进行一个最好值的估计, 从而进行删减
+2. 元学习??
+
+
+
+### PLAN
+
+1. 基于pytorch
+2. 可视化部分
+   1. 表现出中间特征与输出的关系
+3. 量化部分
+   1. 给出中间变量重要性分布
+
+
 
 
 

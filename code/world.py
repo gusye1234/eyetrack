@@ -29,6 +29,9 @@ else:
 label_scalar = 1000
 scalar = [800, 600]
 useSigmoid = True
+print(__file__)
+
+
 
 verbose = False
 CHECKPOINTS_PATH = "./checkpoints"
